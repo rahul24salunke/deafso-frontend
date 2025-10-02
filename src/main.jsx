@@ -2,9 +2,25 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
+import { Toaster } from './components/ui/sonner'
+import store from './redux/store';
+import { persistStore } from 'redux-persist';
+import { PersistGate } from 'redux-persist/integration/react'
+import { Provider } from 'react-redux'
+import { loadAuthFromStorage } from './redux/authSlice'
+
+const persistor = persistStore(store);
+
+// Load auth data from localStorage on app start
+store.dispatch(loadAuthFromStorage());
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <App />
+    <Provider store={store}>
+      <PersistGate loading={null} persistor={persistor}>
+        <App />
+      </PersistGate>
+    </Provider>
+    <Toaster/>
   </StrictMode>,
 )

@@ -1,9 +1,14 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import React, { use, useState } from "react";
-import { Link } from "react-router-dom";
+import { AuthApi } from "@/lib/endpoints";
+import React, { useState } from "react";
+import { setUser } from "@/redux/authSlice";
+import { useDispatch, useSelector } from "react-redux";
+import { Link, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import {z} from "zod";
+import { Loader2 } from "lucide-react";
 
 const loginSchema=z.object({
   email:z.string().email("Please provide a valid email address"),
@@ -11,34 +16,52 @@ const loginSchema=z.object({
 });
 
 export default function LoginPage() {
+  const {user}= useSelector(store=>store.auth);
   const [form ,setForm]=useState({
     email:"",
     password:""
   });
+  const dispatch=useDispatch();
+  const navigate=useNavigate();
+
   const [err,setErr]=useState({});
-  const [isSubmitting,setIsSubmitting]=useState();
+  const [isSubmitting,setIsSubmitting]=useState(false);
 
   const handleChange=(e)=>{
       setForm({...form ,[e.target.id]:e.target.value});
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async(e) => {
     e.preventDefault();
     setIsSubmitting(true);
-      const res=loginSchema.safeParse(form);
-      if (!res.success) {
-        const fieldErr={};
-        res.error.errors.forEach((error) => {
+    
+    const res = loginSchema.safeParse(form);
+    if (!res.success) {
+      const fieldErr = {};
+      res.error.errors.forEach((error) => {
         fieldErr[error.path[0]] = error.message;
-        });
+      });
       setErr(fieldErr);
+      setIsSubmitting(false);
       return;
-      }
+    }
+    
     try {
-      //server request
+      const response = await AuthApi.studentLogin(form);
+      
+      if (response.data.success) {
+        // Store user data and token from response
+        const userData = {
+          ...response.data.data,
+          token: response.data.token
+        };
+        dispatch(setUser(userData));
+        toast.success(response.data.message);
+        navigate('/student/dashboard');
+      }
     } catch (error) {
-      console.log(error);
-    }finally{
+      toast.error(error.response?.data?.message || "Something went wrong");
+    } finally {
       setIsSubmitting(false);
     }
   };
@@ -83,12 +106,21 @@ export default function LoginPage() {
               />
               {err.password && <p className="text-xs text-red-600 mt-1">{err.password}</p>}
             </div>
-            <Button
-              onClick={handleSubmit}
-              className="w-full h-10 sm:h-11 lg:h-12 mt-6 sm:mt-8 bg-purple-700 hover:bg-purple-800 active:bg-purple-900 text-white font-semibold rounded-lg shadow-lg transition duration-300 text-sm sm:text-base lg:text-lg"
-            >
-              Login
-            </Button>
+            {
+              isSubmitting ? <Button
+                onClick={handleSubmit}
+                className="w-full h-10 sm:h-11 lg:h-12 mt-6 sm:mt-8 bg-purple-700 hover:bg-purple-800 active:bg-purple-900 text-white font-semibold rounded-lg shadow-lg transition duration-300 text-sm sm:text-base lg:text-lg"
+              >
+                <Loader2 className="mr-1 h-6 w-6 text-white animate-spin"/>
+                Login
+              </Button> :
+                <Button
+                  onClick={handleSubmit}
+                  className="w-full h-10 sm:h-11 lg:h-12 mt-6 sm:mt-8 bg-purple-700 hover:bg-purple-800 active:bg-purple-900 text-white font-semibold rounded-lg shadow-lg transition duration-300 text-sm sm:text-base lg:text-lg"
+                >
+                  Login
+                </Button>
+            }
           </div>
           <div className="mt-4 sm:mt-6 text-center">
             <Link to="/student/signup" className="text-sm sm:text-base text-purple-300 hover:text-purple-200 transition-colors duration-200 underline underline-offset-2 bg-transparent border-none cursor-pointer">

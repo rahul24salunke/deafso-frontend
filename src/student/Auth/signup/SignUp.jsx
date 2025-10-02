@@ -2,9 +2,12 @@ import React, { useState } from "react";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
-import axios from "axios";
+import { Link, useNavigate } from "react-router-dom";
+import { AuthApi } from "@/lib/endpoints";
+import { useDispatch } from "react-redux";
+import { setUser } from "@/redux/authSlice";
 import {z} from "zod";
+import { toast } from "sonner";
 
 const signupSchema=z.object({
     fullname:z.string().min(2,"Full name must be between 2 and 255 characters").max(255),
@@ -31,6 +34,8 @@ export default function SignupPage() {
   });
   const [err,setErr]=useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const handleChange = (e) =>
     setForm({ ...form, [e.target.id]: e.target.value });
@@ -49,16 +54,23 @@ export default function SignupPage() {
     }
     try {
       setIsSubmitting(true);
-       const response=await axios.post("http://localhost:3000/api/v1/student/signup", form,{
-        withCredentials:true
-       });
-       console.log(response);  
-    }catch(error){
-      console.log(error.message);
-    }finally {
+      const response = await AuthApi.studentSignup(form);
+      
+      if (response.data.success) {
+        // Store user data and token from response
+        const userData = {
+          ...response.data.data,
+          token: response.data.token
+        };
+        dispatch(setUser(userData));
+        toast.success(response.data.message);
+        navigate('/student/dashboard');
+      }
+    } catch(error) {
+      toast.error(error.response?.data?.message || "Something went wrong");
+    } finally {
       setIsSubmitting(false);
     }
-    console.log("Sign-up data:", form); // replace with real sign-up logic
   };
 
   return (

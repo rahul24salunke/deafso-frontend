@@ -3,11 +3,15 @@ import React, { useState } from "react";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
-import {z} from "zod"
+import { Link, useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { setUser } from "@/redux/authSlice";
+import {z} from "zod";
+import { toast } from "sonner";
+import { AuthApi } from "@/lib/endpoints";
 
 const signupSchema=z.object({
-    name:z.string().min(2,"Full name must be between 2 and 255 characters").max(255),
+    fullname:z.string().min(2,"Full name must be between 2 and 255 characters").max(255),
     email:z.string().email("Please provide a valid email address"),
     mobile:z.string().regex(/^[0-9]{10}$/,"Mobile Number must be 10 Digit"),
     password:z.string().min(6,"Password must be at least 6 characters long"),
@@ -15,18 +19,20 @@ const signupSchema=z.object({
 
 export default function Signup() {
   const [form, setForm] = useState({
-    name: "",
+    fullname: "",
     email: "",
     mobile:"",
     password:"",
   });
   const [err,setErr]=useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
     
   const handleChange = (e) =>
     setForm({ ...form, [e.target.id]: e.target.value });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async(e) => {
     e.preventDefault();
     setErr({});
     const res=signupSchema.safeParse(form);
@@ -39,14 +45,25 @@ export default function Signup() {
       return;
     }
     try {
+      setIsSubmitting(true);
+      const response = await AuthApi.teacherSignup(form);
       
+      if (response.data.success) {
+        // Store user data and token from response
+        const userData = {
+          ...response.data.data,
+          token: response.data.token,
+          userType: 'teacher' // Add user type to distinguish from student
+        };
+        dispatch(setUser(userData));
+        toast.success(response.data.message);
+        navigate('/teacher/dashboard'); // Navigate to teacher dashboard
+      }
     } catch (error) {
-      console.log(error);
-      
-    }finally{
+      toast.error(error.response?.data?.message || "Something went wrong");
+    } finally {
       setIsSubmitting(false);
     }
-    console.log("Sign-up data:", form); // replace with real sign-up logic
   };
 
   return (
@@ -62,19 +79,19 @@ export default function Signup() {
           <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5 lg:space-y-6" noValidate>
             {/* Name */}
             <div className="space-y-2">
-              <label htmlFor="name" className="block text-sm sm:text-base font-semibold text-purple-300">
+              <label htmlFor="fullname" className="block text-sm sm:text-base font-semibold text-purple-300">
                 Full Name
               </label>
               <Input
-                id="name"
+                id="fullname"
                 placeholder="John Doe"
                 type={"name"}
-                value={form.name}
+                value={form.fullname}
                 onChange={handleChange}
                 required
                 className="w-full h-10 sm:h-11 lg:h-12 px-3 sm:px-4 bg-gray-900 border border-purple-700 text-white placeholder-purple-400 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 rounded-lg text-sm sm:text-base transition-all duration-200"
               />
-              {err.name && <p className="text-xs text-red-600 mt-1">{err.name}</p>}
+              {err.fullname && <p className="text-xs text-red-600 mt-1">{err.fullname}</p>}
 
             </div>
 

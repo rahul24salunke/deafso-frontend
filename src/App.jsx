@@ -13,6 +13,7 @@ import TeacherProfilePage from './teacher/ProfilePage';
 import ClassStudentsPage from './ClassStudentsPage';
 import AddSubjectPage from './subject/AddSubjectPage';
 import ChatSubjectPage from './subject/ChatSubjectPage';
+import AudioToSign from './deaf/AudioToSign';
 
 function App() {
   const Approuter=createBrowserRouter([

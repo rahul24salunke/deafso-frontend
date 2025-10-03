@@ -225,7 +225,7 @@ export default function DashboardPage() {
                   <div className="flex items-center justify-center gap-6 text-gray-400 text-sm mb-4">
                     <div className="flex items-center gap-2">
                       <BookOpen className="w-4 h-4" />
-                      <span>ID: {subject.subjectId}</span>
+                      <span>{subject.subjectName}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Calendar className="w-4 h-4" />
@@ -238,17 +238,12 @@ export default function DashboardPage() {
                 </div>
 
                 <div className="mt-auto flex flex-col gap-3">
-                  <Button className="w-full bg-purple-700 hover:bg-purple-800 active:bg-purple-900 text-white font-semibold py-2 rounded-lg transition-all duration-200">
+                  <Button
+                    onClick={() => navigate(`/AudioToSign?subjectId=${subject.subjectId}&subjectName=${encodeURIComponent(subject.subjectName || '')}`)}
+                    className="w-full bg-purple-700 hover:bg-purple-800 active:bg-purple-900 text-white font-semibold py-2 rounded-lg transition-all duration-200"
+                  >
                     <BookOpen className="w-4 h-4 mr-2" />
                     View Materials
-                  </Button>
-                  <Button
-                    onClick={() => handleChatWithSubject(subject.subjectId)}
-                    variant="outline"
-                    className="w-full flex items-center justify-center gap-2 bg-transparent border-2 border-green-600 text-green-300 hover:bg-green-700 hover:text-white font-semibold py-2 rounded-lg transition-all duration-200"
-                  >
-                    <MessageSquare className="w-4 h-4" />
-                    Chat with AI
                   </Button>
                 </div>
               </CardContent>

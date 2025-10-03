@@ -19,6 +19,7 @@ export const SubjectApi = {
   addSubject: (formData) => api.post('/api/v1/subject/add-subject', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
   chat: (payload) => api.post('/api/v1/subject/chat', payload),
   getStudentSubjects: (payload) => api.post('/api/v1/subject/get-student-subjects', payload),
+  getSubjectMaterial: (subjectId) => api.get(`/api/v1/subject/${subjectId}/material`),
 };
 
 

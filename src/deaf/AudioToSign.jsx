@@ -723,7 +723,7 @@ export default function AudioToSign() {
                 onClick={() => setActiveTab('chat')}
                 className={`mode-button ${activeTab === 'chat' ? 'active' : 'inactive'}`}
               >
-                Chat with PDF
+                Chat with Subjects
               </button>
             </div>
 
@@ -737,7 +737,7 @@ export default function AudioToSign() {
             ) : (
               <div className="panel-header">
                 <h2 className="panel-title">
-                  <Volume2 size={20} /> Chat with PDF
+                  <Volume2 size={20} /> Chat with Subjects
                 </h2>
               </div>
             )}

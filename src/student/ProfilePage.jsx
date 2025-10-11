@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import { DashboardApi } from '@/lib/endpoints';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -7,7 +8,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { ArrowLeft, User, Mail, Phone, Calendar, BookOpen, Hash } from 'lucide-react';
 
 export default function StudentProfilePage() {
-  const { studentID } = useParams();
+  const { user } = useSelector(store => store.auth);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [profile, setProfile] = useState(null);
@@ -16,7 +17,7 @@ export default function StudentProfilePage() {
     const fetchProfile = async () => {
       try {
         setLoading(true);
-        const res = await DashboardApi.getStudentProfile(studentID);
+        const res = await DashboardApi.getStudentProfile(user?.id);
         if (res.data.success) {
           setProfile(res.data.data);
         } else {
@@ -28,8 +29,9 @@ export default function StudentProfilePage() {
         setLoading(false);
       }
     };
-    if (studentID) fetchProfile();
-  }, [studentID]);
+    if (user?.id) fetchProfile();
+  }, [user?.id]);
+
 
   if (loading) {
     return (
@@ -145,6 +147,41 @@ export default function StudentProfilePage() {
             </CardContent>
           </Card>
         )}
+
+        {/* Stats Section */}
+        {profile && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+            <Card className="bg-gray-800 border border-purple-700">
+              <CardContent className="p-6 text-center">
+                <Calendar className="w-12 h-12 text-purple-400 mx-auto mb-4" />
+                <h3 className="text-xl font-bold text-white mb-2">Class</h3>
+                <p className="text-3xl font-bold text-purple-400">
+                  {user?.standard}-{user?.division}
+                </p>
+                <p className="text-gray-400 text-sm">Current Class</p>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-gray-800 border border-purple-700">
+              <CardContent className="p-6 text-center">
+                <User className="w-12 h-12 text-purple-400 mx-auto mb-4" />
+                <h3 className="text-xl font-bold text-white mb-2">Status</h3>
+                <p className="text-3xl font-bold text-green-400">Active</p>
+                <p className="text-gray-400 text-sm">Student Status</p>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* Error Display */}
+        {error && (
+          <Card className="bg-red-900 border border-red-700 mt-8">
+            <CardContent className="p-4">
+              <p className="text-red-200">{error}</p>
+            </CardContent>
+          </Card>
+        )}
+
       </div>
     </div>
   );

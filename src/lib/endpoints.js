@@ -13,6 +13,7 @@ export const DashboardApi = {
   getStudentProfile: (studentID) => api.get(`/api/v1/student/profile/${studentID}`),
   getTeacherProfile: (teacherID) => api.get(`/api/v1/teacher/profile/${teacherID}`),
   getStudentsInClass: (standard, division) => api.get(`/api/v1/class/${standard}/${division}/students`),
+  getTeacherClasses: (teacherID) => api.get(`/api/v1/teacher/${teacherID}/classes`),
 };
 
 export const SubjectApi = {

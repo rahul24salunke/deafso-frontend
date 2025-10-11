@@ -14,6 +14,9 @@ const persistor = persistStore(store);
 // Load auth data from localStorage on app start
 store.dispatch(loadAuthFromStorage());
 
+// Apply dark theme by default
+document.documentElement.classList.add('dark');
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <Provider store={store}>

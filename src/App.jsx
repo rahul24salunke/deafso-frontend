@@ -6,8 +6,9 @@ import HomePage from './student/ui/HomePage';
 import Login from './teacher/Auth/login/Login';
 import Signup from './teacher/Auth/signUp/SignUp';
 import TeacherDashboard from './teacher/ui/TeacherDashboard';
+import ClassManagementPage from './teacher/ui/ClassManagementPage';
 import NotFoundPage from './NotFoundPage';
-import Profile from './profile/Profile';
+// import Profile from './profile/Profile';
 import StudentProfilePage from './student/ProfilePage';
 import TeacherProfilePage from './teacher/ProfilePage';
 import ClassStudentsPage from './ClassStudentsPage';
@@ -54,6 +55,10 @@ function App() {
       element:<TeacherDashboard/>
     },
     {
+      path:'/teacher/classes',
+      element:<ClassManagementPage/>
+    },
+    {
       path:'/class/:standard/:division/students',
       element:<ClassStudentsPage/>
     },
@@ -67,7 +72,7 @@ function App() {
     },
     {
       path:'/profile',
-      element:<Profile/>
+      element:<StudentProfilePage/>
     },
     {
       path:'/AudioToSign',

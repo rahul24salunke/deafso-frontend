@@ -179,7 +179,7 @@ export default function DashboardPage() {
                 </div>
                 <div className="text-xs text-gray-400 truncate">{user?.email}</div>
                 <div className="pt-3 border-t border-gray-700 space-y-2">
-                  <Link to={"/profile"} className="flex items-center justify-center gap-2">
+                  <Link to={"/student/profile/:studentID"} className="flex items-center justify-center gap-2">
                     <Button
                       variant="outline"
                       className="w-full flex items-center justify-center gap-2 bg-gray-700 hover:bg-gray-600 text-white border-gray-600"

@@ -36,6 +36,20 @@ export default function TeacherProfilePage() {
   const [profile, setProfile] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [tempProfile, setTempProfile] = useState({});
+  const [classes, setClasses] = useState([]);
+  const [classesLoading, setClassesLoading] = useState(true);
+
+  // Function to fetch student count for a specific class
+  const fetchStudentCount = async (standard, division) => {
+    try {
+      const response = await DashboardApi.getStudentsInClass(standard, division);
+      const students = response.data?.data || response.data?.students || response.data || [];
+      return Array.isArray(students) ? students.length : 0;
+    } catch (err) {
+      console.warn(`Failed to fetch student count for ${standard}-${division}:`, err);
+      return 0;
+    }
+  };
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -57,6 +71,63 @@ export default function TeacherProfilePage() {
     };
     
     if (teacherID) fetchProfile();
+  }, [teacherID]);
+
+  // Fetch classes data for stats
+  useEffect(() => {
+    const fetchClasses = async () => {
+      try {
+        setClassesLoading(true);
+        const response = await DashboardApi.getTeacherClasses(teacherID);
+        
+        if (response.data?.success && response.data?.data) {
+          // Transform API data to match our expected format
+          const apiClasses = response.data.data;
+          
+          // Group by standard and division, then combine subjects
+          const groupedClasses = apiClasses.reduce((acc, item) => {
+            const key = `${item.standard}-${item.division}`;
+            if (!acc[key]) {
+              acc[key] = {
+                standard: item.standard,
+                division: item.division,
+                subjects: [],
+                subjectIds: []
+              };
+            }
+            acc[key].subjects.push(item.subjectName);
+            acc[key].subjectIds.push(item.subjectId);
+            return acc;
+          }, {});
+
+          // Convert to array and fetch student counts
+          const transformedClasses = Object.values(groupedClasses).map(cls => ({
+            ...cls,
+            studentCount: 0, // Will be updated below
+            subjects: [...new Set(cls.subjects)] // Remove duplicates
+          }));
+
+          // Fetch student counts for each class
+          const classesWithStudentCounts = await Promise.all(
+            transformedClasses.map(async (cls) => {
+              const studentCount = await fetchStudentCount(cls.standard, cls.division);
+              return { ...cls, studentCount };
+            })
+          );
+
+          setClasses(classesWithStudentCounts);
+        } else {
+          setClasses([]);
+        }
+        setClassesLoading(false);
+      } catch (err) {
+        console.error('Failed to load classes:', err);
+        setClasses([]);
+        setClassesLoading(false);
+      }
+    };
+
+    if (teacherID) fetchClasses();
   }, [teacherID]);
 
   const handleEdit = () => {
@@ -268,7 +339,9 @@ export default function TeacherProfilePage() {
             <CardContent className="p-6 text-center">
               <BookOpen className="w-12 h-12 text-orange-400 mx-auto mb-4" />
               <h3 className="text-xl font-bold text-white mb-2">Subjects</h3>
-              <p className="text-3xl font-bold text-orange-400">8</p>
+              <p className="text-3xl font-bold text-orange-400">
+                {classesLoading ? '...' : [...new Set(classes.flatMap(cls => cls.subjects))].length}
+              </p>
               <p className="text-gray-400 text-sm">Active Subjects</p>
             </CardContent>
           </Card>
@@ -277,7 +350,9 @@ export default function TeacherProfilePage() {
             <CardContent className="p-6 text-center">
               <Users className="w-12 h-12 text-orange-400 mx-auto mb-4" />
               <h3 className="text-xl font-bold text-white mb-2">Students</h3>
-              <p className="text-3xl font-bold text-orange-400">156</p>
+              <p className="text-3xl font-bold text-orange-400">
+                {classesLoading ? '...' : classes.reduce((sum, cls) => sum + cls.studentCount, 0)}
+              </p>
               <p className="text-gray-400 text-sm">Total Students</p>
             </CardContent>
           </Card>
@@ -285,9 +360,11 @@ export default function TeacherProfilePage() {
           <Card className="bg-gray-800 border border-orange-700">
             <CardContent className="p-6 text-center">
               <GraduationCap className="w-12 h-12 text-orange-400 mx-auto mb-4" />
-              <h3 className="text-xl font-bold text-white mb-2">Experience</h3>
-              <p className="text-3xl font-bold text-orange-400">5+</p>
-              <p className="text-gray-400 text-sm">Years Teaching</p>
+              <h3 className="text-xl font-bold text-white mb-2">Classes</h3>
+              <p className="text-3xl font-bold text-orange-400">
+                {classesLoading ? '...' : classes.length}
+              </p>
+              <p className="text-gray-400 text-sm">Total Classes</p>
             </CardContent>
           </Card>
         </div>
@@ -298,7 +375,7 @@ export default function TeacherProfilePage() {
             <h2 className="text-xl font-bold text-orange-400">Quick Actions</h2>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Link to="/subject/add-subject">
                 <Button className="w-full bg-blue-600 hover:bg-blue-700">
                   <BookOpen className="w-4 h-4 mr-2" />
@@ -306,17 +383,10 @@ export default function TeacherProfilePage() {
                 </Button>
               </Link>
               
-              <Link to="/class/10/A/students">
+              <Link to="/teacher/classes">
                 <Button className="w-full bg-green-600 hover:bg-green-700">
                   <Users className="w-4 h-4 mr-2" />
-                  View Students
-                </Button>
-              </Link>
-              
-              <Link to="/subject/chat">
-                <Button className="w-full bg-purple-600 hover:bg-purple-700">
-                  <Settings className="w-4 h-4 mr-2" />
-                  Test Subject Chat
+                  View Classes
                 </Button>
               </Link>
             </div>
